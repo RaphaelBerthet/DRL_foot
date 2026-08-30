@@ -11,7 +11,7 @@ import numpy as np
 import random
 import math
 
-p = 0.3  # proba de faire une action random (pour voir les conséquences)
+p = 0.4  # proba de faire une action random (pour voir les conséquences)
 
 class Foot_1_joueur:
     def __init__(self):
@@ -32,10 +32,10 @@ class Foot_1_joueur:
             state = build_state_foot_1_joueur(TAILLE_STATE_FOOT_1J, self)
             self.joueur1.action = int(np.argmax(self.reseau_neurones.calcul_couche_sortie(state))) + 1
             
-            '''if random.random() < p:
+            if random.random() < p:
                 self.joueur1.action = random.randint(1, 9)
             else:
-                self.joueur1.action = 5'''
+                self.joueur1.action = 5
             self.joueur1.convert_action_vitesse()
 
         self.balle.verif_collisions([self.joueur1])
