@@ -74,17 +74,18 @@ class Joueur:
                 JBx = balle.x - self.x
                 JBy = balle.y - self.y
                 JB = math.sqrt(JBx ** 2 + JBy ** 2)
-                x1x = JBx / JB
-                x1y = JBy / JB
-                coef = 0
-                dx = x1x * coef
-                dy = x1y * coef
-                while math.sqrt((JBx + dx) ** 2 + (JBy + dy) ** 2) <= self.rayon + balle.rayon:
-                    coef += 0.1
+                if JB != 0:
+                    x1x = JBx / JB
+                    x1y = JBy / JB
+                    coef = 0
                     dx = x1x * coef
                     dy = x1y * coef
-                self.x -= dx
-                self.y -= dy
+                    while math.sqrt((JBx + dx) ** 2 + (JBy + dy) ** 2) <= self.rayon + balle.rayon:
+                        coef += 0.1
+                        dx = x1x * coef
+                        dy = x1y * coef
+                    self.x -= dx
+                    self.y -= dy
 
             else:
                 if LIMITE_OUEST_TERRAIN + self.rayon < self.x + self.vx < LIMITE_EST_TERRAIN - self.rayon:

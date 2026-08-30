@@ -1,6 +1,6 @@
 NB_PARTIES = 30000
-NB_ITERATIONS_1_PARTIE = 500
-p_debut = 0.4
+NB_ITERATIONS_1_PARTIE = 300
+p_debut = 1
 p_fin = 0.4
 TAILLE_STATE = 24
 NB_ACTIONS_POSSIBLES = 9  # on suppose les actions numérotées 1, 2, ... NB_ACTIONS_POSSIBLES
