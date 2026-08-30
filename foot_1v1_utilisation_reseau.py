@@ -5,8 +5,8 @@ from packages.balle import Balle
 from packages.joueur import Joueur
 from packages.affichage_scores import afficher_scores
 from packages.build_state import build_state_foot_1v1
-from packages.parametres_reseau_neurones import TAILLE_STATE_FOOT_1V1, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2
-from packages.entrainement_reseau_neurones import Reseau_neurones
+from packages._1v1_parametres_reseau_neurones import TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2
+from packages._1v1_entrainement_reseau_neurones import Reseau_neurones
 import numpy as np
 import random
 import math
@@ -19,8 +19,8 @@ class Foot_1v1:
         self.balle = Balle(LONGUEUR // 2 - 50 + math.cos(teta) * R + cote, LARGEUR // 2 + math.sin(teta) * R)        
         self.scorej1 = 0
         self.scorej2 = 0
-        self.reseau_neurones_J1 = Reseau_neurones("reseau_neurones_foot_1v1_J1_version_finale.npz", TAILLE_STATE_FOOT_1V1, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
-        self.reseau_neurones_J2 = Reseau_neurones("reseau_neurones_foot_1v1_J2_imbattable.npz", TAILLE_STATE_FOOT_1V1, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+        self.reseau_neurones_J1 = Reseau_neurones("4_reseau_neurones_foot_1v1_J1.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+        self.reseau_neurones_J2 = Reseau_neurones("4_reseau_neurones_foot_1v1_J2_imbattable.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
 
         pyxel.init(LONGUEUR, LARGEUR, title=TITRE)
         pyxel.mouse(True)
@@ -30,8 +30,8 @@ class Foot_1v1:
 
     def update(self):
         if self.joueur1.nb_executions_action % NB_EXECUTIONS_1_ACTION == 0:
-            state_J1 = build_state_foot_1v1(TAILLE_STATE_FOOT_1V1, self, app.joueur1, app.joueur2)
-            state_J2 = build_state_foot_1v1(TAILLE_STATE_FOOT_1V1, self, app.joueur2, app.joueur1)
+            state_J1 = build_state_foot_1v1(TAILLE_STATE, self, app.joueur1, app.joueur2)
+            state_J2 = build_state_foot_1v1(TAILLE_STATE, self, app.joueur2, app.joueur1)
             self.joueur1.action = int(np.argmax(self.reseau_neurones_J1.calcul_couche_sortie(state_J1))) + 1
             self.joueur2.action = int(np.argmax(self.reseau_neurones_J2.calcul_couche_sortie(state_J2))) + 1
             self.joueur1.convert_action_vitesse()

@@ -1,7 +1,7 @@
 import numpy as np
 from .adam_update import adam_update
 from .relu import relu, relu_derivative
-from .parametres_reseau_neurones import N_STEP, NB_SAMPLES_MAX, NB_SAMPLES_DEBUT_ENTRAINEMENT, TAILLE_BATCHS, NB_ENTRAINEMENT_BATCH, gamma, learning_rate, ACTU_W_TARGET, PERIODE_STOCKAGE_PC, MAX_NORME_GRADIENT, DELTA_HUBER_LOSS
+from ._1_joueur_parametres_reseau_neurones import N_STEP, NB_SAMPLES_MAX, NB_SAMPLES_DEBUT_ENTRAINEMENT, TAILLE_BATCHS, NB_ENTRAINEMENT_BATCH, gamma, learning_rate, ACTU_W_TARGET, PERIODE_STOCKAGE_PC, MAX_NORME_GRADIENT, DELTA_HUBER_LOSS
 
 
 class Reseau_neurones:

@@ -2,7 +2,7 @@ from .parametres import VITESSE_JOUEUR, COULEUR_BALLE, RAYON_BALLE, COEF_FROT_FL
 import math
 import pyxel
 import random
-from typing import Any
+from collections import Counter
 
 class Balle:
     def __init__(self, x: float, y: float, vitesse_aleatoire_debut: bool=False):
@@ -22,7 +22,7 @@ class Balle:
         self.balle_tiree = False
         Fx, Fy = 0, 0
         c = 0
-
+        joueur_possession = []
         for joueur in joueurs:
             if math.sqrt((joueur.x + joueur.vx - self.x - self.vx) ** 2 + (joueur.y + joueur.vy - self.y - self.vy) ** 2) <= self.rayon + joueur.rayon and not math.sqrt((joueur.x - self.x) ** 2 + (joueur.y - self.y) ** 2) <= self.rayon + joueur.rayon:
                 # on le compte uniquement si la balle est pas dans l'obstacle
@@ -32,13 +32,17 @@ class Balle:
                 Fx += VITESSE_JOUEUR * OBx / OB
                 Fy += VITESSE_JOUEUR * OBy / OB
                 c += 1
-                joueur_possession = joueur.nom
+                joueur_possession.append(joueur.nom)
                 self.balle_tiree = True
+
         if c == 1:
             ## 1 seul joueur a tapé la balle ie il a la possession
-            self.possession = joueur_possession
+            self.possession = joueur_possession[0]
         elif c > 1:
-            self.possession = ''
+            if len(Counter(joueur_possession).keys()) == 1:
+                self.possession = joueur_possession[0]
+            else:
+                self.possession = ''
 
         self.vx += Fx * 2
         self.vy += Fy * 2

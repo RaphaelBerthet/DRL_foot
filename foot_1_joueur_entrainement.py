@@ -1,6 +1,6 @@
 from packages.build_state import build_state_foot_1_joueur
-from packages.entrainement_reseau_neurones import Reseau_neurones
-from packages.parametres_reseau_neurones import N_STEP, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2, NB_ITERATIONS_1_PARTIE_FOOT_1_JOUEUR, TAILLE_STATE_FOOT_1J, NB_ACTIONS_POSSIBLES, NB_PARTIES, p_debut, p_fin
+from packages._1_joueur_entrainement_reseau_neurones import Reseau_neurones
+from packages._1_joueur_parametres_reseau_neurones import N_STEP, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2, NB_ITERATIONS_1_PARTIE, TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_PARTIES, p_debut, p_fin
 import random
 import numpy as np
 from foot_1_joueur import Foot_1_joueur
@@ -42,12 +42,12 @@ def jouer_une_partie(reseau_neurones, p, partie):
     while partie_en_cours and not but_marque:
         iteration += 1
         if app.joueur1.nb_executions_action % NB_EXECUTIONS_1_ACTION == 0:
-            state1 = build_state_foot_1_joueur(TAILLE_STATE_FOOT_1J, app)
+            state1 = build_state_foot_1_joueur(TAILLE_STATE, app)
             action = choisir_action(reseau_neurones, state1, p)
             reward, but_marque = executer_action(action, app, partie)
-            if iteration >= NB_ITERATIONS_1_PARTIE_FOOT_1_JOUEUR:
+            if iteration >= NB_ITERATIONS_1_PARTIE:
                 partie_en_cours = False
-            state2 = build_state_foot_1_joueur(TAILLE_STATE_FOOT_1J, app)
+            state2 = build_state_foot_1_joueur(TAILLE_STATE, app)
 
             buffer_local.append((state1, action, reward, state2, but_marque))
 
@@ -69,7 +69,7 @@ def jouer_une_partie(reseau_neurones, p, partie):
 
 
 def _emettre_sample_n_step(buffer_local, reseau_neurones, n):
-    from packages.parametres_reseau_neurones import gamma
+    from packages._1_joueur_parametres_reseau_neurones import gamma
     state1, action, _, _, _ = buffer_local[0]
     G = 0.0
     for i in range(n):
@@ -117,7 +117,7 @@ def executer_action(action, app, partie):
     return reward, but_marque
 
 def entrainer(nb_parties=NB_PARTIES):
-    reseau_neurones = Reseau_neurones("reseau_neurones_foot_1_joueur.npz", TAILLE_STATE_FOOT_1J, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+    reseau_neurones = Reseau_neurones("reseau_neurones_foot_1_joueur.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
     for partie in range(nb_parties):
         p = p_debut - (p_debut - p_fin) * partie / nb_parties
         if partie % 100 == 0:

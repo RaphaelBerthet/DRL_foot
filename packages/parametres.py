@@ -1,4 +1,4 @@
-TITRE = "foot 1v1"
+TITRE = "foot !"
 
 ## terrain
 LONGUEUR = 1000

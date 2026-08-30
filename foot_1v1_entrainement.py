@@ -1,6 +1,6 @@
 from packages.build_state import build_state_foot_1v1
-from packages.entrainement_reseau_neurones import Reseau_neurones
-from packages.parametres_reseau_neurones import N_STEP, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2, NB_ITERATIONS_1_PARTIE_FOOT_1V1, TAILLE_STATE_FOOT_1V1, NB_ACTIONS_POSSIBLES, NB_PARTIES, p_debut, p_fin
+from packages._1v1_entrainement_reseau_neurones import Reseau_neurones
+from packages._1v1_parametres_reseau_neurones import N_STEP, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2, NB_ITERATIONS_1_PARTIE, TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_PARTIES, p_debut, p_fin
 import random
 import numpy as np
 from foot_1v1 import Foot_1v1
@@ -46,17 +46,17 @@ def jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, p, partie):
     while partie_en_cours:
         iteration += 1
         if app.joueur1.nb_executions_action % NB_EXECUTIONS_1_ACTION == 0:
-            state1_J1 = build_state_foot_1v1(TAILLE_STATE_FOOT_1V1, app, app.joueur1, app.joueur2)
+            state1_J1 = build_state_foot_1v1(TAILLE_STATE, app, app.joueur1, app.joueur2)
             action_J1 = choisir_action(reseau_neurones_J1, state1_J1, p)
-            state1_J2 = build_state_foot_1v1(TAILLE_STATE_FOOT_1V1, app, app.joueur2, app.joueur1)
+            state1_J2 = build_state_foot_1v1(TAILLE_STATE, app, app.joueur2, app.joueur1)
             action_J2 = choisir_action(reseau_neurones_J2, state1_J2, p)
             reward_J1, reward_J2, but_marque, vainqueur = executer_action(action_J1, action_J2, app, partie)
-            if iteration >= NB_ITERATIONS_1_PARTIE_FOOT_1V1:
+            if iteration >= NB_ITERATIONS_1_PARTIE:
                 partie_en_cours = False
             if but_marque:
                 partie_en_cours = False
-            state2_J1 = build_state_foot_1v1(TAILLE_STATE_FOOT_1V1, app, app.joueur1, app.joueur2)
-            state2_J2 = build_state_foot_1v1(TAILLE_STATE_FOOT_1V1, app, app.joueur2, app.joueur1)
+            state2_J1 = build_state_foot_1v1(TAILLE_STATE, app, app.joueur1, app.joueur2)
+            state2_J2 = build_state_foot_1v1(TAILLE_STATE, app, app.joueur2, app.joueur1)
 
             buffer_local_J1.append((state1_J1, action_J1, reward_J1, state2_J1, but_marque))
             buffer_local_J2.append((state1_J2, action_J2, reward_J2, state2_J2, but_marque))
@@ -84,7 +84,7 @@ def jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, p, partie):
 
 
 def _emettre_sample_n_step(buffer_local, reseau_neurones, n):
-    from packages.parametres_reseau_neurones import gamma
+    from packages._1v1_parametres_reseau_neurones import gamma
     state1, action, _, _, _ = buffer_local[0]
     G = 0.0
     for i in range(n):
@@ -159,8 +159,8 @@ def executer_action(action_J1, action_J2, app, partie):
     return reward_J1, reward_J2, but_marque, vainqueur
 
 def entrainer(nb_parties=NB_PARTIES):
-    reseau_neurones_J1 = Reseau_neurones("reseau_neurones_foot_1v1_J1.npz", TAILLE_STATE_FOOT_1V1, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
-    reseau_neurones_J2 = Reseau_neurones("reseau_neurones_foot_1v1_J2.npz", TAILLE_STATE_FOOT_1V1, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+    reseau_neurones_J1 = Reseau_neurones("reseau_neurones_foot_1v1_J1.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+    reseau_neurones_J2 = Reseau_neurones("reseau_neurones_foot_1v1_J2.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
     victoires_J1 = 0
     victoires_J2 = 0
     Liste_victoires = []
