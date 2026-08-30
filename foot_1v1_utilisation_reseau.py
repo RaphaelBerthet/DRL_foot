@@ -19,8 +19,8 @@ class Foot_1v1:
         self.balle = Balle(LONGUEUR // 2 - 50 + math.cos(teta) * R + cote, LARGEUR // 2 + math.sin(teta) * R)        
         self.scorej1 = 0
         self.scorej2 = 0
-        self.reseau_neurones_J1 = Reseau_neurones("reseau_neurones_foot_1v1_J1.npz", TAILLE_STATE_FOOT_1V1, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
-        self.reseau_neurones_J2 = Reseau_neurones("reseau_neurones_foot_1v1_J2.npz", TAILLE_STATE_FOOT_1V1, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+        self.reseau_neurones_J1 = Reseau_neurones("reseau_neurones_foot_1v1_J1_version_finale.npz", TAILLE_STATE_FOOT_1V1, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+        self.reseau_neurones_J2 = Reseau_neurones("reseau_neurones_foot_1v1_J2_imbattable.npz", TAILLE_STATE_FOOT_1V1, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
 
         pyxel.init(LONGUEUR, LARGEUR, title=TITRE)
         pyxel.mouse(True)
