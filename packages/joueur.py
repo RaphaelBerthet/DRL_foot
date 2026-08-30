@@ -16,6 +16,7 @@ class Joueur:
         self.commande_droite = DROITE  # valeur 3
         self.nom = nom
         self.nb_executions_action = 0
+        self.tir = False
 
     def convert_consigne_action(self):
         gauche = pyxel.btn(self.commande_gauche)

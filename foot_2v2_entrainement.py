@@ -124,6 +124,10 @@ def choisir_action(reseau_neurones, state, p):
 
 
 def executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app: Foot_2v2, partie):
+    joueur1ax, joueur1ay = app.joueur1a.x, app.joueur1a.y
+    joueur1bx, joueur1by = app.joueur1b.x, app.joueur1b.y
+    joueur2ax, joueur2ay = app.joueur2a.x, app.joueur2a.y
+    joueur2bx, joueur2by = app.joueur2b.x, app.joueur2b.y
 
     if app.joueur1a.nb_executions_action % NB_EXECUTIONS_1_ACTION == 0:
         app.joueur1a.action = action_J1a
@@ -163,10 +167,37 @@ def executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app: Foot_2v
         vainqueur = 'joueur2'
 
     else:
-        reward_J1a = 0
-        reward_J1b = 0
-        reward_J2a = 0
-        reward_J2b = 0
+        reward_J1a = - 0.001
+        reward_J2a = - 0.001
+        reward_J1b = - 0.001
+        reward_J2b = - 0.001
+        if app.joueur1a.tir:
+            reward_J1a = 0.1 * max(app.balle.vx / (VITESSE_JOUEUR), app.balle.vx / (4 * VITESSE_JOUEUR))
+        if app.joueur1b.tir:
+            reward_J1b = 0.1 * max(app.balle.vx / (VITESSE_JOUEUR), app.balle.vx / (4 * VITESSE_JOUEUR))
+        if app.joueur2a.tir:
+            reward_J2a = 0.1 * max(-app.balle.vx / (VITESSE_JOUEUR), -app.balle.vx / (4 * VITESSE_JOUEUR))
+        if app.joueur2b.tir:
+            reward_J2b = 0.1 * max(-app.balle.vx / (VITESSE_JOUEUR), -app.balle.vx / (4 * VITESSE_JOUEUR))            
+
+        if app.balle.possession == 'joueur1':
+            reward_J1a, reward_J1b = 0.1, 0.1
+        if app.balle.possession == 'joueur2':
+            reward_J2a, reward_J2b = 0.1, 0.1
+    
+        distance_J1a_balle_sans_bouger_joueur = math.sqrt((app.balle.x - joueur1ax) ** 2 + (app.balle.y - joueur1ay) ** 2)
+        distance_J1a_balle_bouger_joueur = math.sqrt((app.balle.x - app.joueur1a.x) ** 2 + (app.balle.y - app.joueur1a.y) ** 2)
+        distance_J2a_balle_sans_bouger_joueur = math.sqrt((app.balle.x - joueur2ax) ** 2 + (app.balle.y - joueur2ay) ** 2)
+        distance_J2a_balle_bouger_joueur = math.sqrt((app.balle.x - app.joueur2a.x) ** 2 + (app.balle.y - app.joueur2a.y) ** 2)
+        distance_J1b_balle_sans_bouger_joueur = math.sqrt((app.balle.x - joueur1bx) ** 2 + (app.balle.y - joueur1by) ** 2)
+        distance_J1b_balle_bouger_joueur = math.sqrt((app.balle.x - app.joueur1b.x) ** 2 + (app.balle.y - app.joueur1b.y) ** 2)
+        distance_J2b_balle_sans_bouger_joueur = math.sqrt((app.balle.x - joueur2bx) ** 2 + (app.balle.y - joueur2by) ** 2)
+        distance_J2b_balle_bouger_joueur = math.sqrt((app.balle.x - app.joueur2b.x) ** 2 + (app.balle.y - app.joueur2b.y) ** 2)
+        ## on recompense si ca permet de reduire la distance qu'il y aurait eu sans avoir bougé
+        reward_J1a += 0.001 * (distance_J1a_balle_sans_bouger_joueur - distance_J1a_balle_bouger_joueur) / VITESSE_JOUEUR
+        reward_J2a += 0.001 * (distance_J2a_balle_sans_bouger_joueur - distance_J2a_balle_bouger_joueur) / VITESSE_JOUEUR
+        reward_J1b += 0.001 * (distance_J1b_balle_sans_bouger_joueur - distance_J1b_balle_bouger_joueur) / VITESSE_JOUEUR
+        reward_J2b += 0.001 * (distance_J2b_balle_sans_bouger_joueur - distance_J2b_balle_bouger_joueur) / VITESSE_JOUEUR
 
     return reward_J1a, reward_J1b, reward_J2a, reward_J2b, but_marque, vainqueur
 

@@ -140,10 +140,8 @@ def executer_action(action_J1, action_J2, app, partie):
         if app.balle.balle_tiree == True:
             if app.balle.possession == 'joueur1':
                 reward_J1 = 0.1 * max(app.balle.vx / (VITESSE_JOUEUR), app.balle.vx / (4 * VITESSE_JOUEUR))
-                reward_J2 = 0
             elif app.balle.possession == 'joueur2':
                 reward_J2 = 0.1 * max(- app.balle.vx / (VITESSE_JOUEUR), - app.balle.vx / (4 * VITESSE_JOUEUR))
-                reward_J1 = 0
             else:
                 reward_J1 = 0.1 * max(app.balle.vx / (VITESSE_JOUEUR), app.balle.vx / (4 * VITESSE_JOUEUR))
                 reward_J2 = 0.1 * max(- app.balle.vx / (VITESSE_JOUEUR), - app.balle.vx / (4 * VITESSE_JOUEUR))
@@ -155,7 +153,7 @@ def executer_action(action_J1, action_J2, app, partie):
         ## on recompense si ca permet de reduire la distance qu'il y aurait eu sans avoir bougé
         reward_J1 += 0.003 * (distance_J1_balle_sans_bouger_joueur - distance_J1_balle_bouger_joueur) / VITESSE_JOUEUR
         reward_J2 += 0.003 * (distance_J2_balle_sans_bouger_joueur - distance_J2_balle_bouger_joueur) / VITESSE_JOUEUR
-    
+
     return reward_J1, reward_J2, but_marque, vainqueur
 
 def entrainer(nb_parties=NB_PARTIES):

@@ -20,6 +20,8 @@ class Balle:
 
     def verif_collisions(self, joueurs):  # maj de la vitesse
         self.balle_tiree = False
+        for joueur in joueurs:
+            joueur.tir = False
         Fx, Fy = 0, 0
         c = 0
         joueur_possession = []
@@ -34,6 +36,7 @@ class Balle:
                 c += 1
                 joueur_possession.append(joueur.nom)
                 self.balle_tiree = True
+                joueur.tir = True
 
         if c == 1:
             ## 1 seul joueur a tapé la balle ie il a la possession
