@@ -1,12 +1,13 @@
-from packages.build_state import build_state_foot_2v2
+from packages.build_state import build_state_foot_2v2_J1, build_state_foot_2v2_J2
 from packages._2v2_entrainement_reseau_neurones import Reseau_neurones
-from packages._2v2_parametres_reseau_neurones import N_STEP, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2, NB_ITERATIONS_1_PARTIE, TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_PARTIES, p_debut, p_fin
+from packages._2v2_parametres_reseau_neurones import conversions_actions_J2, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2, NB_ITERATIONS_1_PARTIE, TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_PARTIES, p_debut, p_fin
 import random
 import numpy as np
 from foot_2v2 import Foot_2v2
 import math
-from packages.parametres import VITESSE_JOUEUR, NB_EXECUTIONS_1_ACTION
+from packages.parametres import VITESSE_JOUEUR, NB_EXECUTIONS_1_ACTION, LONGUEUR
 from collections import deque
+from packages.plus_proche_balle import plus_proche_balle
 
 """
 etat (24): 
@@ -18,13 +19,13 @@ etat (24):
     distance balle cages OUEST selon x
     distance balle cages EST selon x
     distance balle-cages selon y (0 si la balle est alignée)
-    distance joueur aux 4 limites de terrain
-    distance joueurs adverses selon x et y
+    distance balle aux 4 limites de terrain
     distance joueurs adverses-balle selon x et y
     distance joueur allié selon x et y
+    distance joueur-adversaires
     distance joueur allié-balle selon x et y
     possession balle (-1 si c'est l'adversaire, 0 si c'est personne, 1 si c'est le joueur)
-action (9):
+action (81):
     "rien" : 9,
     "gauche" : 1,
     "droite" : 2, 
@@ -34,87 +35,84 @@ action (9):
     "gauchebas" : 6,
     "droitehaut" : 7,
     "droitebas" : 8
+    les 9 premiers correspondent a l'action gauche du joueurb, de 10-18, action droite pour Jb etc
 """
 
-def jouer_une_partie(reseau_neurones_J1a, reseau_neurones_J1b, reseau_neurones_J2a, reseau_neurones_J2b, p, partie):
+def jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, p, partie, entrainement=True):
     """Joue une partie complète et alimente le réseau en samples."""
     ## initialisation de la partie
     app = Foot_2v2()
-    buffer_local_J1a = deque()  # stocke (state1, action, reward) en attente
-    buffer_local_J1b = deque()  # stocke (state1, action, reward) en attente
-    buffer_local_J2a = deque()  # stocke (state1, action, reward) en attente
-    buffer_local_J2b = deque()  # stocke (state1, action, reward) en attente
 
     iteration = 0
     partie_en_cours = True
+    historique_tirs = []  # on y stocke des tuples (nom du tireur, iteration correspondante, balle.x, balle.y)
+    buffer_local = []
     while partie_en_cours:
         iteration += 1
-        if app.joueur1a.nb_executions_action % NB_EXECUTIONS_1_ACTION == 0:
-            state1_J1a = build_state_foot_2v2(TAILLE_STATE, app, app.joueur1a, app.joueur1b, app.joueur2a, app.joueur2b)
-            action_J1a = choisir_action(reseau_neurones_J1a, state1_J1a, p)
-            state1_J2a = build_state_foot_2v2(TAILLE_STATE, app, app.joueur2a, app.joueur2b, app.joueur1a, app.joueur1b)
-            action_J2a = choisir_action(reseau_neurones_J2a, state1_J2a, p)
-            state1_J1b = build_state_foot_2v2(TAILLE_STATE, app, app.joueur1b, app.joueur1a, app.joueur2a, app.joueur2b)
-            action_J1b = choisir_action(reseau_neurones_J1b, state1_J1b, p)
-            state1_J2b = build_state_foot_2v2(TAILLE_STATE, app, app.joueur2b, app.joueur2a, app.joueur1a, app.joueur1b)
-            action_J2b = choisir_action(reseau_neurones_J2b, state1_J2b, p)
-            reward_J1a, reward_J1b, reward_J2a, reward_J2b, but_marque, vainqueur = executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app, partie)
+        plus_proche_J1, Tp_J1, Te_J1 = plus_proche_balle(app.joueur1a, app.joueur1b, app.balle)
+        plus_proche_J2, Tp_J2, Te_J2 = plus_proche_balle(app.joueur2a, app.joueur2b, app.balle)
+        
+        if plus_proche_J1 == 'joueur a' and plus_proche_J2 == 'joueur a':
+            state1_J1 = build_state_foot_2v2_J1(TAILLE_STATE, app, app.balle, app.joueur1a, app.joueur1b, app.joueur2a, app.joueur2b, Tp_J1, Te_J1)
+            state1_J2 = build_state_foot_2v2_J2(TAILLE_STATE, app, app.balle, app.joueur2a, app.joueur2b, app.joueur1a, app.joueur1b, Tp_J2, Te_J2)
+        elif plus_proche_J1 == 'joueur a' and plus_proche_J2 == 'joueur b':
+            state1_J1 = build_state_foot_2v2_J1(TAILLE_STATE, app, app.balle, app.joueur1a, app.joueur1b, app.joueur2b, app.joueur2a, Tp_J1, Te_J1)
+            state1_J2 = build_state_foot_2v2_J2(TAILLE_STATE, app, app.balle, app.joueur2b, app.joueur2a, app.joueur1a, app.joueur1b, Tp_J2, Te_J2)
+        elif plus_proche_J1 == 'joueur b' and plus_proche_J2 == 'joueur a':
+            state1_J1 = build_state_foot_2v2_J1(TAILLE_STATE, app, app.balle, app.joueur1b, app.joueur1a, app.joueur2a, app.joueur2b, Tp_J1, Te_J1)
+            state1_J2 = build_state_foot_2v2_J2(TAILLE_STATE, app, app.balle, app.joueur2a, app.joueur2b, app.joueur1b, app.joueur1a, Tp_J2, Te_J2)
+        elif plus_proche_J1 == 'joueur b' and plus_proche_J2 == 'joueur b':
+            state1_J1 = build_state_foot_2v2_J1(TAILLE_STATE, app, app.balle, app.joueur1b, app.joueur1a, app.joueur2b, app.joueur2a, Tp_J1, Te_J1)
+            state1_J2 = build_state_foot_2v2_J2(TAILLE_STATE, app, app.balle, app.joueur2b, app.joueur2a, app.joueur1b, app.joueur1a, Tp_J2, Te_J2)
 
-            if iteration >= NB_ITERATIONS_1_PARTIE:
-                partie_en_cours = False
-            if but_marque:
-                partie_en_cours = False
+        action_J1 = choisir_action(reseau_neurones_J1, state1_J1, p)
+        action_J2 = int(np.argmax(reseau_neurones_J2.calcul_couche_sortie(state1_J2))) + 1
+        if plus_proche_J1 == 'joueur a':
+            idx_J1 = action_J1 - 1
+            action_J1a = idx_J1 % 9 + 1
+            action_J1b = idx_J1 // 9 + 1
+        elif plus_proche_J1 == 'joueur b':
+            idx_J1 = action_J1 - 1
+            action_J1b = idx_J1 % 9 + 1
+            action_J1a = idx_J1 // 9 + 1
+        if plus_proche_J2 == 'joueur a':
+            idx_J2 = action_J2 - 1
+            action_J2a = conversions_actions_J2[idx_J2 % 9 + 1]
+            action_J2b = conversions_actions_J2[idx_J2 // 9 + 1]
+        elif plus_proche_J2 == 'joueur b':
+            idx_J2 = action_J2 - 1
+            action_J2b = conversions_actions_J2[idx_J2 % 9 + 1]
+            action_J2a = conversions_actions_J2[idx_J2 // 9 + 1]
 
-            state2_J1a = build_state_foot_2v2(TAILLE_STATE, app, app.joueur1a, app.joueur1b, app.joueur2a, app.joueur2b)
-            state2_J2a = build_state_foot_2v2(TAILLE_STATE, app, app.joueur2a, app.joueur2b, app.joueur1a, app.joueur1b)
-            state2_J1b = build_state_foot_2v2(TAILLE_STATE, app, app.joueur1b, app.joueur1a, app.joueur2a, app.joueur2b)
-            state2_J2b = build_state_foot_2v2(TAILLE_STATE, app, app.joueur2b, app.joueur2a, app.joueur1a, app.joueur1b)
+        reward_J1, but_marque, vainqueur, buffer_local, historique_tirs = executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app, iteration, buffer_local, historique_tirs, plus_proche_J1)
 
-            buffer_local_J1a.append((state1_J1a, action_J1a, reward_J1a, state2_J1a, but_marque))
-            buffer_local_J2a.append((state1_J2a, action_J2a, reward_J2a, state2_J2a, but_marque))
-            buffer_local_J1b.append((state1_J1b, action_J1b, reward_J1b, state2_J1b, but_marque))
-            buffer_local_J2b.append((state1_J2b, action_J2b, reward_J2b, state2_J2b, but_marque))
-
-            # dès qu'on a accumulé n transitions, on peut calculer un sample n-step
-            if len(buffer_local_J1a) >= N_STEP:
-                _emettre_sample_n_step(buffer_local_J1a, reseau_neurones_J1a, N_STEP)
-                buffer_local_J1a.popleft()
-                _emettre_sample_n_step(buffer_local_J2a, reseau_neurones_J2a, N_STEP)
-                buffer_local_J2a.popleft()
-                _emettre_sample_n_step(buffer_local_J1b, reseau_neurones_J1b, N_STEP)
-                buffer_local_J1b.popleft()
-                _emettre_sample_n_step(buffer_local_J2b, reseau_neurones_J2b, N_STEP)
-                buffer_local_J2b.popleft()
-
-            reseau_neurones_J1a.entrainement_reseau(partie)
-            reseau_neurones_J2a.entrainement_reseau(partie)
-            reseau_neurones_J1b.entrainement_reseau(partie)
-            reseau_neurones_J2b.entrainement_reseau(partie)
-
-        else:
-            executer_action(None, None, None, None, app, partie)
+        if iteration >= NB_ITERATIONS_1_PARTIE:
+            partie_en_cours = False
         if but_marque:
-            print(f'partie {partie} : but {vainqueur}')
+            partie_en_cours = False
 
-    # à la fin de la partie, vider les transitions restantes (n-step raccourci)
-    '''while buffer_local:
-        _emettre_sample_n_step(buffer_local, reseau_neurones, len(buffer_local))
-        buffer_local.popleft()'''  # on perd les derniers instants pour pas s'embeter dans les calculs
+        if plus_proche_J1 == 'joueur a' and plus_proche_J2 == 'joueur a':
+            state2_J1 = build_state_foot_2v2_J1(TAILLE_STATE, app, app.balle, app.joueur1a, app.joueur1b, app.joueur2a, app.joueur2b, Tp_J1, Te_J1)
+        elif plus_proche_J1 == 'joueur a' and plus_proche_J2 == 'joueur b':
+            state2_J1 = build_state_foot_2v2_J1(TAILLE_STATE, app, app.balle, app.joueur1a, app.joueur1b, app.joueur2b, app.joueur2a, Tp_J1, Te_J1)
+        elif plus_proche_J1 == 'joueur b' and plus_proche_J2 == 'joueur a':
+            state2_J1 = build_state_foot_2v2_J1(TAILLE_STATE, app, app.balle, app.joueur1b, app.joueur1a, app.joueur2a, app.joueur2b, Tp_J1, Te_J1)
+        elif plus_proche_J1 == 'joueur b' and plus_proche_J2 == 'joueur b':
+            state2_J1 = build_state_foot_2v2_J1(TAILLE_STATE, app, app.balle, app.joueur1b, app.joueur1a, app.joueur2b, app.joueur2a, Tp_J1, Te_J1)
+
+        buffer_local.append(np.concatenate([state1_J1, state2_J1, [action_J1, reward_J1, but_marque]]))
+
+        app.balle.joueur_tir = None
+           
+        '''if but_marque:
+            print(f'partie {partie} : but {vainqueur}')'''
+
+    for sample in buffer_local:
+        reseau_neurones_J1.ajout_sample(sample)
+    if entrainement:
+        reseau_neurones_J1.entrainement_reseau(partie)
 
     return vainqueur
-
-
-def _emettre_sample_n_step(buffer_local, reseau_neurones, n):
-    from packages._2v2_parametres_reseau_neurones import gamma
-    state1, action, _, _, _ = buffer_local[0]
-    G = 0.0
-    for i in range(n):
-        _, _, r_i, _, _ = buffer_local[i]
-        G += (gamma ** i) * r_i
-    # état à n pas plus loin (pour le bootstrap), et si la séquence s'est terminée avant n pas
-    _, _, _, state_n, terminal_n = buffer_local[min(n, len(buffer_local)) - 1]
-    sample = np.concatenate([state1, state_n, [action, G, terminal_n]])
-    reseau_neurones.ajout_sample(sample)
 
 
 def choisir_action(reseau_neurones, state, p):
@@ -123,109 +121,121 @@ def choisir_action(reseau_neurones, state, p):
     return np.argmax(reseau_neurones.calcul_couche_sortie(state)) + 1
 
 
-def executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app: Foot_2v2, partie):
+def executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app: Foot_2v2, iteration, buffer_local, historique_tirs, plus_proche_J1):
     joueur1ax, joueur1ay = app.joueur1a.x, app.joueur1a.y
     joueur1bx, joueur1by = app.joueur1b.x, app.joueur1b.y
-    joueur2ax, joueur2ay = app.joueur2a.x, app.joueur2a.y
-    joueur2bx, joueur2by = app.joueur2b.x, app.joueur2b.y
 
-    if app.joueur1a.nb_executions_action % NB_EXECUTIONS_1_ACTION == 0:
-        app.joueur1a.action = action_J1a
-        app.joueur1a.convert_action_vitesse()
-        app.joueur2a.action = action_J2a
-        app.joueur2a.convert_action_vitesse()
-        app.joueur1b.action = action_J1b
-        app.joueur1b.convert_action_vitesse()
-        app.joueur2b.action = action_J2b
-        app.joueur2b.convert_action_vitesse()
+    app.joueur1a.action = action_J1a
+    app.joueur1a.convert_action_vitesse()
+    app.joueur2a.action = action_J2a
+    app.joueur2a.convert_action_vitesse()
+    app.joueur1b.action = action_J1b
+    app.joueur1b.convert_action_vitesse()
+    app.joueur2b.action = action_J2b
+    app.joueur2b.convert_action_vitesse()
 
-    app.balle.verif_collisions([app.joueur1a, app.joueur2a, app.joueur1b, app.joueur2b])
+    app.balle.verif_collisions([app.joueur1a, app.joueur1b, app.joueur2a, app.joueur2b])
 
-    app.balle.deplacement()
+    app.balle.deplacement([app.joueur1a, app.joueur1b, app.joueur2a, app.joueur2b])
     app.joueur1a.deplacement(app.balle, [app.joueur2a, app.joueur2b, app.joueur1b])
     app.joueur2a.deplacement(app.balle, [app.joueur1a, app.joueur2b, app.joueur1b])
     app.joueur1b.deplacement(app.balle, [app.joueur2a, app.joueur2b, app.joueur1a])
     app.joueur2b.deplacement(app.balle, [app.joueur1a, app.joueur2a, app.joueur1b])
 
+    reward_J1 = 0
+    if historique_tirs != []:
+        if (app.joueur1a.tir or app.joueur1b.tir or app.joueur2a.tir or app.joueur2b.tir) and historique_tirs[-1][0][-2] == '1':
+            # on recompense le tir précédent en fonction de la distance parcourue
+            distance_parcourue = app.balle.x - historique_tirs[-1][2]
+            buffer_local[historique_tirs[-1][1]][3] += (distance_parcourue / (VITESSE_JOUEUR * 2))
+
+    if app.joueur1a.tir:
+        if historique_tirs != []:
+            if historique_tirs[-1][0][-2] == '1':  # conservation de balle
+                buffer_local[historique_tirs[-1][1]][3] += 3  # on ajoute cette reward au sample correspondant
+            elif historique_tirs[-1][0][-2] == '2':  # bonne défense
+                reward_J1 += 3
+        historique_tirs.append(('joueur 1a', len(buffer_local), app.balle.x, app.balle.y))
+    elif app.joueur1b.tir:
+        if historique_tirs != []:
+            if historique_tirs[-1][0][-2] == '1':  # conservation de balle
+                buffer_local[historique_tirs[-1][1]][3] += 3  # on ajoute cette reward au sample correspondant
+            elif historique_tirs[-1][0][-2] == '2':  # bonne défense
+                reward_J1 += 3
+        historique_tirs.append(('joueur 1b', len(buffer_local), app.balle.x, app.balle.y))
+    elif app.joueur2a.tir:
+        historique_tirs.append(('joueur 2a', len(buffer_local), app.balle.x, app.balle.y))
+    elif app.joueur2b.tir:
+        historique_tirs.append(('joueur 2b', len(buffer_local), app.balle.x, app.balle.y))
+
     but_marque = False
     score1 = app.balle.actu_score1(app.scorej1)
     score2 = app.balle.actu_score2(app.scorej2)
     vainqueur = ''
+    
     if score1 != app.scorej1:
-        reward_J1a = 10
-        reward_J2a = -10
-        reward_J1b = 10
-        reward_J2b = -10
         but_marque = True
         vainqueur = 'joueur1'
+        reward_J1 = 100
     elif score2 != app.scorej2:
-        reward_J1a = -10
-        reward_J2a = 10
-        reward_J1b = -10
-        reward_J2b = 10
         but_marque = True
         vainqueur = 'joueur2'
-
+        reward_J1 = -100
     else:
-        reward_J1a = - 0.001
-        reward_J2a = - 0.001
-        reward_J1b = - 0.001
-        reward_J2b = - 0.001
-        if app.joueur1a.tir:
-            reward_J1a = 0.1 * max(app.balle.vx / (VITESSE_JOUEUR), app.balle.vx / (4 * VITESSE_JOUEUR))
-        if app.joueur1b.tir:
-            reward_J1b = 0.1 * max(app.balle.vx / (VITESSE_JOUEUR), app.balle.vx / (4 * VITESSE_JOUEUR))
-        if app.joueur2a.tir:
-            reward_J2a = 0.1 * max(-app.balle.vx / (VITESSE_JOUEUR), -app.balle.vx / (4 * VITESSE_JOUEUR))
-        if app.joueur2b.tir:
-            reward_J2b = 0.1 * max(-app.balle.vx / (VITESSE_JOUEUR), -app.balle.vx / (4 * VITESSE_JOUEUR))            
+        if plus_proche_J1 == 'joueur a':
+            distance_J1_balle_sans_bouger_joueur = math.sqrt((app.balle.x - joueur1ax) ** 2 + (app.balle.y - joueur1ay) ** 2)
+            distance_J1_balle_bouger_joueur = math.sqrt((app.balle.x - app.joueur1a.x) ** 2 + (app.balle.y - app.joueur1a.y) ** 2)
+            ## on recompense si le joueur le plus proche de la balle s'en rapproche
+            reward_J1 += 0.01 * (distance_J1_balle_sans_bouger_joueur - distance_J1_balle_bouger_joueur) / VITESSE_JOUEUR
 
-        if app.balle.possession == 'joueur1':
-            reward_J1a, reward_J1b = 0.1, 0.1
-        if app.balle.possession == 'joueur2':
-            reward_J2a, reward_J2b = 0.1, 0.1
-    
-        distance_J1a_balle_sans_bouger_joueur = math.sqrt((app.balle.x - joueur1ax) ** 2 + (app.balle.y - joueur1ay) ** 2)
-        distance_J1a_balle_bouger_joueur = math.sqrt((app.balle.x - app.joueur1a.x) ** 2 + (app.balle.y - app.joueur1a.y) ** 2)
-        distance_J2a_balle_sans_bouger_joueur = math.sqrt((app.balle.x - joueur2ax) ** 2 + (app.balle.y - joueur2ay) ** 2)
-        distance_J2a_balle_bouger_joueur = math.sqrt((app.balle.x - app.joueur2a.x) ** 2 + (app.balle.y - app.joueur2a.y) ** 2)
-        distance_J1b_balle_sans_bouger_joueur = math.sqrt((app.balle.x - joueur1bx) ** 2 + (app.balle.y - joueur1by) ** 2)
-        distance_J1b_balle_bouger_joueur = math.sqrt((app.balle.x - app.joueur1b.x) ** 2 + (app.balle.y - app.joueur1b.y) ** 2)
-        distance_J2b_balle_sans_bouger_joueur = math.sqrt((app.balle.x - joueur2bx) ** 2 + (app.balle.y - joueur2by) ** 2)
-        distance_J2b_balle_bouger_joueur = math.sqrt((app.balle.x - app.joueur2b.x) ** 2 + (app.balle.y - app.joueur2b.y) ** 2)
-        ## on recompense si ca permet de reduire la distance qu'il y aurait eu sans avoir bougé
-        reward_J1a += 0.001 * (distance_J1a_balle_sans_bouger_joueur - distance_J1a_balle_bouger_joueur) / VITESSE_JOUEUR
-        reward_J2a += 0.001 * (distance_J2a_balle_sans_bouger_joueur - distance_J2a_balle_bouger_joueur) / VITESSE_JOUEUR
-        reward_J1b += 0.001 * (distance_J1b_balle_sans_bouger_joueur - distance_J1b_balle_bouger_joueur) / VITESSE_JOUEUR
-        reward_J2b += 0.001 * (distance_J2b_balle_sans_bouger_joueur - distance_J2b_balle_bouger_joueur) / VITESSE_JOUEUR
+        elif plus_proche_J1 == 'joueur b':
+            distance_J1_balle_sans_bouger_joueur = math.sqrt((app.balle.x - joueur1bx) ** 2 + (app.balle.y - joueur1by) ** 2)
+            distance_J1_balle_bouger_joueur = math.sqrt((app.balle.x - app.joueur1b.x) ** 2 + (app.balle.y - app.joueur1b.y) ** 2)
+            reward_J1 += 0.01 * (distance_J1_balle_sans_bouger_joueur - distance_J1_balle_bouger_joueur) / VITESSE_JOUEUR
 
-    return reward_J1a, reward_J1b, reward_J2a, reward_J2b, but_marque, vainqueur
+
+    return reward_J1, but_marque, vainqueur, buffer_local, historique_tirs
 
 def entrainer(nb_parties=NB_PARTIES):
-    reseau_neurones_J1a = Reseau_neurones("reseau_neurones_foot_2v2_J1a.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
-    reseau_neurones_J2a = Reseau_neurones("reseau_neurones_foot_2v2_J2a.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
-    reseau_neurones_J1b = Reseau_neurones("reseau_neurones_foot_2v2_J1b.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
-    reseau_neurones_J2b = Reseau_neurones("reseau_neurones_foot_2v2_J2b.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
-    victoires_J1 = 0
-    victoires_J2 = 0
+    reseau_neurones_J1 = Reseau_neurones("reseau_neurones_foot_2v2.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+    reseau_neurones_J2 = Reseau_neurones("reseau_neurones_foot_2v2.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+
     Liste_victoires = []
     for partie in range(nb_parties):
         p = p_debut - (p_debut - p_fin) * partie / nb_parties
-        vainqueur = jouer_une_partie(reseau_neurones_J1a, reseau_neurones_J1b, reseau_neurones_J2a, reseau_neurones_J2b, p, partie)
-
+        vainqueur = jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, p, partie)
         if vainqueur == 'joueur1':
-            victoires_J1 += 1
             Liste_victoires.append(1)
         elif vainqueur == 'joueur2':
-            victoires_J2 += 1
             Liste_victoires.append(-1)
         else:
             Liste_victoires.append(0)
-        Liste_victoires = Liste_victoires[-100:]
-        if partie % 10 == 0:
-            numero_partie = partie + 1
-            print(f'WR J1 : {victoires_J1 * 100 / numero_partie} % | WR J2 : {victoires_J2 * 100 / numero_partie} % | nulles : {(numero_partie - victoires_J1 - victoires_J2) * 100 / numero_partie} %')
-            print(f'WR /100 parties J1 : {Liste_victoires.count(1) * 100 / len(Liste_victoires)} % | WR /100 parties J2 : {Liste_victoires.count(-1) * 100 / len(Liste_victoires)} %')
+        Liste_victoires = Liste_victoires[-1000:]
+        if partie % 100 == 0:
+            print(f'WR J1 : {Liste_victoires.count(1) * 100 / len(Liste_victoires)} % | WR J2 : {Liste_victoires.count(-1) * 100 / len(Liste_victoires)} % | nulles : {Liste_victoires.count(0) * 100 / len(Liste_victoires)} %')
+
+        if (partie + 1) % 1000 == 0:
+            # on realise 300 parties
+            Liste_victoires = []
+            for _ in range(300):
+                vainqueur = jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, 0, partie, False)
+                if vainqueur == 'joueur1':
+                    Liste_victoires.append(1)
+                elif vainqueur == 'joueur2':
+                    Liste_victoires.append(-1)
+                else:
+                    Liste_victoires.append(0)
+                Liste_victoires = Liste_victoires[-1000:]
+            print()
+            print('resultats du test :')
+            print(f'WR /300 parties J1 : {Liste_victoires.count(1) * 100 / len(Liste_victoires)} % | WR /300 parties J2 : {Liste_victoires.count(-1) * 100 / len(Liste_victoires)} %')
+            print()
+            if Liste_victoires.count(1) * 100 / len(Liste_victoires) > 50:  # si on gagne + de 50 % du temps on actualise reseau J2
+                print('actu')
+                reseau_neurones_J2 = Reseau_neurones("reseau_neurones_foot_2v2.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+            victoires_J1 = 0
+            victoires_J2 = 0
+            Liste_victoires = []
 
 if __name__ == "__main__":
     entrainer()

@@ -11,7 +11,7 @@ import numpy as np
 import random
 import math
 
-p = 0.4  # proba de faire une action random (pour voir les conséquences)
+p = 0.7  # proba de faire une action random (pour voir les conséquences)
 
 class Foot_1_joueur:
     def __init__(self):
@@ -28,7 +28,8 @@ class Foot_1_joueur:
     def update(self):
         # Le réseau produit un vecteur de 9 scores (indices 0 à 8), alors que
         # les actions du jeu sont numérotées de 1 à 9.
-        if self.joueur1.nb_executions_action % NB_EXECUTIONS_1_ACTION == 0:
+        # if self.joueur1.nb_executions_action % NB_EXECUTIONS_1_ACTION == 0:
+        if True:
             state = build_state_foot_1_joueur(TAILLE_STATE, self)
             self.joueur1.action = int(np.argmax(self.reseau_neurones.calcul_couche_sortie(state))) + 1
             

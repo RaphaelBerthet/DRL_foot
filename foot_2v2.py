@@ -9,10 +9,9 @@ import math
 
 class Foot_2v2:
     def __init__(self, afficher_pyxel: bool=False):
-        cote = random.choice([0, 100])
-        R = 50
+        R = 120
         teta = random.randint(0, 359) * math.pi / 180
-        self.balle = Balle(LONGUEUR // 2 - 50 + math.cos(teta) * R + cote, LARGEUR // 2 + math.sin(teta) * R)
+        self.balle = Balle(LONGUEUR // 2 + math.cos(teta) * R, LARGEUR // 2 + math.sin(teta) * R)        
         self.scorej1 = 0
         self.scorej2 = 0
         self.afficher_pyxel = afficher_pyxel
@@ -52,10 +51,9 @@ class Foot_2v2:
         score = self.balle.actu_score1(self.scorej1)
         if score != self.scorej1:
             self.scorej1 = score
-            cote = random.choice([0, 100])
-            R = 50
+            R = 120
             teta = random.randint(0, 359) * math.pi / 180
-            self.balle = Balle(LONGUEUR // 2 - 50 + math.cos(teta) * R + cote, LARGEUR // 2 + math.sin(teta) * R)
+            self.balle = Balle(LONGUEUR // 2 + math.cos(teta) * R, LARGEUR // 2 + math.sin(teta) * R)        
             if self.afficher_pyxel:
                 self.joueur1a = Joueur(LONGUEUR / 2 - 50, LARGEUR / 2 - 50, COULEUR_J1, 'joueur1', pyxel.KEY_Q, pyxel.KEY_D, pyxel.KEY_Z, pyxel.KEY_S)
                 self.joueur2a = Joueur(LONGUEUR / 2 + 50, LARGEUR / 2 - 50, COULEUR_J2, 'joueur2', pyxel.KEY_LEFT, pyxel.KEY_RIGHT, pyxel.KEY_UP, pyxel.KEY_DOWN)
@@ -70,10 +68,9 @@ class Foot_2v2:
         score = self.balle.actu_score2(self.scorej2)
         if score != self.scorej2:
             self.scorej2 = score
-            cote = random.choice([0, 100])
-            R = 50
+            R = 120
             teta = random.randint(0, 359) * math.pi / 180
-            self.balle = Balle(LONGUEUR // 2 - 50 + math.cos(teta) * R + cote, LARGEUR // 2 + math.sin(teta) * R)
+            self.balle = Balle(LONGUEUR // 2 + math.cos(teta) * R, LARGEUR // 2 + math.sin(teta) * R)        
             if self.afficher_pyxel:
                 self.joueur1a = Joueur(LONGUEUR / 2 - 50, LARGEUR / 2 - 50, COULEUR_J1, 'joueur1', pyxel.KEY_Q, pyxel.KEY_D, pyxel.KEY_Z, pyxel.KEY_S)
                 self.joueur2a = Joueur(LONGUEUR / 2 + 50, LARGEUR / 2 - 50, COULEUR_J2, 'joueur2', pyxel.KEY_LEFT, pyxel.KEY_RIGHT, pyxel.KEY_UP, pyxel.KEY_DOWN)

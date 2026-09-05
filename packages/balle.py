@@ -10,6 +10,7 @@ class Balle:
         self.rayon = RAYON_BALLE
         self.possession = ''
         self.balle_tiree = False
+        self.joueur_tir = None
         if vitesse_aleatoire_debut:
             angle = random.randint(0, 359) * math.pi / 180
             self.vx = math.cos(angle) * VITESSE_JOUEUR / 2
@@ -25,7 +26,8 @@ class Balle:
         Fx, Fy = 0, 0
         c = 0
         joueur_possession = []
-        for joueur in joueurs:
+        for i in range(len(joueurs)):
+            joueur = joueurs[i]
             if math.sqrt((joueur.x + joueur.vx - self.x - self.vx) ** 2 + (joueur.y + joueur.vy - self.y - self.vy) ** 2) <= self.rayon + joueur.rayon and not math.sqrt((joueur.x - self.x) ** 2 + (joueur.y - self.y) ** 2) <= self.rayon + joueur.rayon:
                 # on le compte uniquement si la balle est pas dans l'obstacle
                 OBx = self.x - joueur.x
@@ -37,14 +39,19 @@ class Balle:
                 joueur_possession.append(joueur.nom)
                 self.balle_tiree = True
                 joueur.tir = True
+                if i == 0:
+                    self.joueur_tir = '1a'
+                elif i == 1:
+                    self.joueur_tir = '1b'
+                elif i == 2:
+                    self.joueur_tir = '2a'
+                elif i == 3:
+                    self.joueur_tir = '2b'
 
         if c == 1:
             ## 1 seul joueur a tapé la balle ie il a la possession
             self.possession = joueur_possession[0]
         elif c > 1:
-            if len(Counter(joueur_possession).keys()) == 1:
-                self.possession = joueur_possession[0]
-            else:
                 self.possession = ''
 
         self.vx += Fx * 2
@@ -62,9 +69,27 @@ class Balle:
 
 
 
-    def deplacement(self):
+    def deplacement(self, joueurs=[]):
         self.x += self.vx
         self.y += self.vy
+        for joueur in joueurs:
+            if math.sqrt((self.x - joueur.x) ** 2 + (self.y - joueur.y) ** 2) <= self.rayon + joueur.rayon:
+                JBx = joueur.x - self.x
+                JBy = joueur.y - self.y
+                JB = math.sqrt(JBx ** 2 + JBy ** 2)
+                if JB != 0:
+                    x1x = JBx / JB
+                    x1y = JBy / JB
+                    coef = 0
+                    dx = x1x * coef
+                    dy = x1y * coef
+                    while math.sqrt((JBx + dx) ** 2 + (JBy + dy) ** 2) <= self.rayon + joueur.rayon + 1:
+                        coef += 0.1
+                        dx = x1x * coef
+                        dy = x1y * coef
+                    self.x -= dx
+                    self.y -= dy
+
         self.vx *= 1 - COEF_FROT_FLUIDE
         self.vy *= 1 - COEF_FROT_FLUIDE
         if self.vx ** 2 + self.vy ** 2 <= FROT_SEC ** 2:
