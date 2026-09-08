@@ -61,13 +61,25 @@ class Reseau_neurones:
             A3 = Z3
             return A3
 
+    def vider_samples(self):
+        self.samples = np.zeros((NB_SAMPLES_MAX, self.TAILLE_SAMPLE), dtype=np.float32)
+        self.samples_count = 0
+        self.head = 0
+        self.mW1 = np.zeros_like(self.W1); self.vW1 = np.zeros_like(self.W1)
+        self.mW2 = np.zeros_like(self.W2); self.vW2 = np.zeros_like(self.W2)
+        self.mW3 = np.zeros_like(self.W3); self.vW3 = np.zeros_like(self.W3)
+        self.mB1 = np.zeros_like(self.B1); self.vB1 = np.zeros_like(self.B1)
+        self.mB2 = np.zeros_like(self.B2); self.vB2 = np.zeros_like(self.B2)
+        self.mB3 = np.zeros_like(self.B3); self.vB3 = np.zeros_like(self.B3)
+        self.t_adam = 0
+
     def ajout_sample(self, sample):
         self.samples[self.head] = sample
         self.head = (self.head + 1) % len(self.samples)
         if self.samples_count < len(self.samples):
             self.samples_count += 1
 
-    def entrainement_reseau(self, numero_partie):
+    def entrainement_reseau(self):
         if self.samples_count >= NB_SAMPLES_DEBUT_ENTRAINEMENT:
             for _ in range(NB_ENTRAINEMENT_BATCH):
                 indices = np.random.choice(self.samples_count, TAILLE_BATCHS, replace=False)
@@ -175,7 +187,6 @@ class Reseau_neurones:
                     self.W1_target, self.W2_target, self.W3_target = self.W1.copy(), self.W2.copy(), self.W3.copy()
                     self.B1_target, self.B2_target, self.B3_target = self.B1.copy(), self.B2.copy(), self.B3.copy()
 
-
-                if self.ct_majs_reseau % PERIODE_STOCKAGE_PC == 0:
-                    np.savez(self.nom_fichier, W1=self.W1, W2=self.W2, W3=self.W3, B1=self.B1, B2=self.B2, B3=self.B3, mW1=self.mW1, mW2=self.mW2, mW3=self.mW3, mB1=self.mB1, mB2=self.mB2, mB3=self.mB3, vW1=self.vW1, vW2=self.vW2, vW3=self.vW3, vB1=self.vB1, vB2=self.vB2, vB3=self.vB3, t_adam=self.t_adam)
-                    print(f"partie : {numero_partie}   Poids, biais exportés dans {self.nom_fichier}")
+    def export_reseau(self, numero_partie):
+        np.savez(self.nom_fichier, W1=self.W1, W2=self.W2, W3=self.W3, B1=self.B1, B2=self.B2, B3=self.B3, mW1=self.mW1, mW2=self.mW2, mW3=self.mW3, mB1=self.mB1, mB2=self.mB2, mB3=self.mB3, vW1=self.vW1, vW2=self.vW2, vW3=self.vW3, vB1=self.vB1, vB2=self.vB2, vB3=self.vB3, t_adam=self.t_adam)
+        print(f"partie : {numero_partie}   Poids, biais exportés dans {self.nom_fichier}")  

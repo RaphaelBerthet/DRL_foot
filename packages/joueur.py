@@ -98,17 +98,18 @@ class Joueur:
                     JBx = joueur.x - self.x
                     JBy = joueur.y - self.y
                     JB = math.sqrt(JBx ** 2 + JBy ** 2)
-                    x1x = JBx / JB
-                    x1y = JBy / JB
-                    coef = 0
-                    dx = x1x * coef
-                    dy = x1y * coef
-                    while math.sqrt((JBx + dx) ** 2 + (JBy + dy) ** 2) <= self.rayon + joueur.rayon:
-                        coef += 0.1
+                    if JB != 0:
+                        x1x = JBx / JB
+                        x1y = JBy / JB
+                        coef = 0
                         dx = x1x * coef
                         dy = x1y * coef
-                    self.x -= dx
-                    self.y -= dy
+                        while math.sqrt((JBx + dx) ** 2 + (JBy + dy) ** 2) <= self.rayon + joueur.rayon:
+                            coef += 0.1
+                            dx = x1x * coef
+                            dy = x1y * coef
+                        self.x -= dx
+                        self.y -= dy
 
             if self.x + self.rayon > LIMITE_EST_TERRAIN:
                 self.x = LIMITE_EST_TERRAIN - self.rayon - 1

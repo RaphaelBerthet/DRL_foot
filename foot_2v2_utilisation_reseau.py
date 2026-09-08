@@ -16,13 +16,12 @@ from packages.plus_proche_balle import plus_proche_balle
 class Foot_2v2:
     def __init__(self):
         self.c = 0
-        R = 120
-        teta = random.randint(0, 359) * math.pi / 180
-        self.balle = Balle(LONGUEUR // 2 + math.cos(teta) * R, LARGEUR // 2 + math.sin(teta) * R)        
+        dy = random.randint(-100, 100)
+        self.balle = Balle(LONGUEUR // 2, LARGEUR // 2 + dy)        
         self.scorej1 = 0
         self.scorej2 = 0
-        self.reseau_neurones_J1 = Reseau_neurones("reseau_neurones_foot_2v2.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
-        self.reseau_neurones_J2 = Reseau_neurones("ras.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+        self.reseau_neurones_J1 = Reseau_neurones("reseau_neurones_foot_2v2_J1.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
+        self.reseau_neurones_J2 = Reseau_neurones("reseau_neurones_foot_2v2_J2.npz", TAILLE_STATE, NB_ACTIONS_POSSIBLES, NB_NEURONES_LAYER1, NB_NEURONES_LAYER2)
 
         pyxel.init(LONGUEUR, LARGEUR, title=TITRE)
         pyxel.mouse(True)
@@ -91,9 +90,8 @@ class Foot_2v2:
         score = self.balle.actu_score1(self.scorej1)
         if score != self.scorej1:
             self.scorej1 = score
-            R = 120
-            teta = random.randint(0, 359) * math.pi / 180
-            self.balle = Balle(LONGUEUR // 2 + math.cos(teta) * R, LARGEUR // 2 + math.sin(teta) * R)        
+            dy = random.randint(-100, 100)
+            self.balle = Balle(LONGUEUR // 2, LARGEUR // 2 + dy)  
             self.joueur1a = Joueur(LONGUEUR / 2 - 50, LARGEUR / 2 - 50, COULEUR_J1, 'joueur1')
             self.joueur2a = Joueur(LONGUEUR / 2 + 50, LARGEUR / 2  - 50, COULEUR_J2, 'joueur2')
             self.joueur1b = Joueur(LONGUEUR / 2 - 50, LARGEUR / 2 + 50, COULEUR_J1, 'joueur1')
@@ -103,9 +101,8 @@ class Foot_2v2:
         score = self.balle.actu_score2(self.scorej2)
         if score != self.scorej2:
             self.scorej2 = score
-            R = 120
-            teta = random.randint(0, 359) * math.pi / 180
-            self.balle = Balle(LONGUEUR // 2 + math.cos(teta) * R, LARGEUR // 2 + math.sin(teta) * R)        
+            dy = random.randint(-100, 100)
+            self.balle = Balle(LONGUEUR // 2, LARGEUR // 2 + dy)        
             self.joueur1a = Joueur(LONGUEUR / 2 - 50, LARGEUR / 2 - 50, COULEUR_J1, 'joueur1')
             self.joueur2a = Joueur(LONGUEUR / 2 + 50, LARGEUR / 2  - 50, COULEUR_J2, 'joueur2')
             self.joueur1b = Joueur(LONGUEUR / 2 - 50, LARGEUR / 2 + 50, COULEUR_J1, 'joueur1')

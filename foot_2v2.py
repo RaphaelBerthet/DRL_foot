@@ -9,9 +9,8 @@ import math
 
 class Foot_2v2:
     def __init__(self, afficher_pyxel: bool=False):
-        R = 120
-        teta = random.randint(0, 359) * math.pi / 180
-        self.balle = Balle(LONGUEUR // 2 + math.cos(teta) * R, LARGEUR // 2 + math.sin(teta) * R)        
+        dy = random.randint(-100, 100)
+        self.balle = Balle(LONGUEUR // 2, LARGEUR // 2 + dy)
         self.scorej1 = 0
         self.scorej2 = 0
         self.afficher_pyxel = afficher_pyxel
