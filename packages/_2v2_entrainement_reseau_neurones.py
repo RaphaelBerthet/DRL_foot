@@ -189,4 +189,23 @@ class Reseau_neurones:
 
     def export_reseau(self, numero_partie):
         np.savez(self.nom_fichier, W1=self.W1, W2=self.W2, W3=self.W3, B1=self.B1, B2=self.B2, B3=self.B3, mW1=self.mW1, mW2=self.mW2, mW3=self.mW3, mB1=self.mB1, mB2=self.mB2, mB3=self.mB3, vW1=self.vW1, vW2=self.vW2, vW3=self.vW3, vB1=self.vB1, vB2=self.vB2, vB3=self.vB3, t_adam=self.t_adam)
-        print(f"partie : {numero_partie}   Poids, biais exportés dans {self.nom_fichier}")  
+        print(f"partie : {numero_partie}   Poids, biais exportés dans {self.nom_fichier}")
+
+    def reimporter_reseau(self, nom_fichier):
+        data = np.load(nom_fichier)
+        self.W1 = data['W1']
+        self.W2 = data['W2']
+        self.W3 = data['W3']
+        self.B1 = data['B1']
+        self.B2 = data['B2']
+        self.B3 = data['B3']
+        self.mW1 = data['mW1']; self.vW1 = data['vW1']
+        self.mW2 = data['mW2']; self.vW2 = data['vW2']
+        self.mW3 = data['mW3']; self.vW3 = data['vW3']
+        self.mB1 = data['mB1']; self.vB1 = data['vB1']
+        self.mB2 = data['mB2']; self.vB2 = data['vB2']
+        self.mB3 = data['mB3']; self.vB3 = data['vB3']
+        self.t_adam = int(data['t_adam'])
+        self.W1_target, self.W2_target, self.W3_target = self.W1.copy(), self.W2.copy(), self.W3.copy()
+        self.B1_target, self.B2_target, self.B3_target = self.B1.copy(), self.B2.copy(), self.B3.copy()
+        self.ct_majs_reseau = 0
