@@ -311,7 +311,6 @@ def entrainer(nb_parties=NB_PARTIES):
                 reseau_neurones_J1.export_reseau(partie)
                 entrainement_actuel = 'J2'
                 reseau_neurones_J2.vider_samples()  # on vide les samples trop vieux
-                score_entrainement = 100 * (Liste_victoires.count(1) - Liste_victoires.count(-1)) / len(Liste_victoires)
             elif Liste_victoires.count(1) * 100 / len(Liste_victoires) + 10 < Liste_victoires.count(-1) * 100 / len(Liste_victoires) and entrainement_actuel == 'J2':
                 reseau_neurones_J2.export_reseau(partie)
                 entrainement_actuel = 'J1'
