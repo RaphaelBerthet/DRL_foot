@@ -278,7 +278,7 @@ def entrainer(nb_parties=NB_PARTIES):
     for partie in range(nb_parties):
         '''xd = - math.log(p_debut)
         xf = - math.log(p_fin)
-        x = xd + (xf - xd) * (partie % 1000) / 1000
+        x = xd + (xf - xd) * (partie % 2000) / 2000
         p = math.exp(-x)'''
         p = p_debut - (p_debut - p_fin) * (partie % 1000) / 1000
         vainqueur = jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, p, partie, entrainement_actuel, True)
@@ -309,17 +309,14 @@ def entrainer(nb_parties=NB_PARTIES):
             print()
             if Liste_victoires.count(1) * 100 / len(Liste_victoires) > 10 + Liste_victoires.count(-1) * 100 / len(Liste_victoires) and entrainement_actuel == 'J1':  # si on gagne 10% + que J2 on actualise reseau J2
                 reseau_neurones_J1.export_reseau(partie)
-                np.savez("reseau_neurones_foot_2v2_J1_stockage_partiel.npz", W1=reseau_neurones_J1.W1, W2=reseau_neurones_J1.W2, W3=reseau_neurones_J1.W3, B1=reseau_neurones_J1.B1, B2=reseau_neurones_J1.B2, B3=reseau_neurones_J1.B3, mW1=reseau_neurones_J1.mW1, mW2=reseau_neurones_J1.mW2, mW3=reseau_neurones_J1.mW3, mB1=reseau_neurones_J1.mB1, mB2=reseau_neurones_J1.mB2, mB3=reseau_neurones_J1.mB3, vW1=reseau_neurones_J1.vW1, vW2=reseau_neurones_J1.vW2, vW3=reseau_neurones_J1.vW3, vB1=reseau_neurones_J1.vB1, vB2=reseau_neurones_J1.vB2, vB3=reseau_neurones_J1.vB3, t_adam=reseau_neurones_J1.t_adam)
                 entrainement_actuel = 'J2'
                 reseau_neurones_J2.vider_samples()  # on vide les samples trop vieux
                 score_entrainement = 100 * (Liste_victoires.count(1) - Liste_victoires.count(-1)) / len(Liste_victoires)
             elif Liste_victoires.count(1) * 100 / len(Liste_victoires) + 10 < Liste_victoires.count(-1) * 100 / len(Liste_victoires) and entrainement_actuel == 'J2':
                 reseau_neurones_J2.export_reseau(partie)
-                np.savez("reseau_neurones_foot_2v2_J2_stockage_partiel.npz", W1=reseau_neurones_J2.W1, W2=reseau_neurones_J2.W2, W3=reseau_neurones_J2.W3, B1=reseau_neurones_J2.B1, B2=reseau_neurones_J2.B2, B3=reseau_neurones_J2.B3, mW1=reseau_neurones_J2.mW1, mW2=reseau_neurones_J2.mW2, mW3=reseau_neurones_J2.mW3, mB1=reseau_neurones_J2.mB1, mB2=reseau_neurones_J2.mB2, mB3=reseau_neurones_J2.mB3, vW1=reseau_neurones_J2.vW1, vW2=reseau_neurones_J2.vW2, vW3=reseau_neurones_J2.vW3, vB1=reseau_neurones_J2.vB1, vB2=reseau_neurones_J2.vB2, vB3=reseau_neurones_J2.vB3, t_adam=reseau_neurones_J2.t_adam)
                 entrainement_actuel = 'J1'
                 reseau_neurones_J1.vider_samples()
 
-            Liste_victoires = []
 
 if __name__ == "__main__":
     entrainer()
