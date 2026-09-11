@@ -84,13 +84,13 @@ def build_state_foot_2v2_J1(taille_state, app, balle, J1p, J1e, J2p, J2e, Tp, Te
 
     state[18], state[19], state[20], state[21] = (LIMITE_EST_TERRAIN - balle.x) / LONGUEUR, (LIMITE_OUEST_TERRAIN - balle.x) / LONGUEUR, (LIMITE_NORD_TERRAIN - balle.y) / LARGEUR, (LIMITE_SUD_TERRAIN - balle.y) / LARGEUR
     state[22] = (balle.y - LARGEUR / 2) / LARGEUR
-    if app.balle.possession == J1p.nom:
+    '''if app.balle.possession == J1p.nom:
         state[23] = 1
     elif app.balle.possession == J2p.nom:
         state[23] = -1
     else:
-        state[23] = 0
-    state[24] = (Te - Tp) / 100
+        state[23] = 0'''
+    state[23] = (Te - Tp) / 100
 
     return state
 
@@ -123,12 +123,12 @@ def build_state_foot_2v2_J2(taille_state, app, balle, J2p, J2e, J1p, J1e, Tp, Te
 
     state[18], state[19], state[20], state[21] = -(LIMITE_OUEST_TERRAIN - balle.x) / LONGUEUR, -(LIMITE_EST_TERRAIN - balle.x) / LONGUEUR, -(LIMITE_SUD_TERRAIN - balle.y) / LARGEUR, -(LIMITE_NORD_TERRAIN - balle.y) / LARGEUR
     state[22] = - (balle.y - LARGEUR / 2) / LARGEUR
-    if app.balle.possession == J2p.nom:
+    '''if app.balle.possession == J2p.nom:
         state[23] = 1
     elif app.balle.possession == J1p.nom:
         state[23] = -1
     else:
-        state[23] = 0
-    state[24] = (Te - Tp) / 100
+        state[23] = 0'''
+    state[23] = (Te - Tp) / 100
 
     return state

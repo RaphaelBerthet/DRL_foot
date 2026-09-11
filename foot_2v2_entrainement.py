@@ -11,7 +11,7 @@ from packages.plus_proche_balle import plus_proche_balle
 from packages.parametres import COEF_FROT_FLUIDE
 import time
 """
-etat (24): 
+etat (25): 
     (toutes les distances sont normalisées)
     distance a la balle selon x
     distance a la balle selon y
@@ -67,29 +67,31 @@ def jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, p, partie, entraine
             state1_J2 = build_state_foot_2v2_J2(TAILLE_STATE, app, app.balle, app.joueur2b, app.joueur2a, app.joueur1b, app.joueur1a, Tp_J2, Te_J2)
 
         if entrainement_actuel == 'J1':
-            action_J1 = choisir_action(reseau_neurones_J1, state1_J1, p)
+            action_J1p, action_J1e = choisir_action(reseau_neurones_J1, state1_J1, p)
             action_J2 = int(np.argmax(reseau_neurones_J2.calcul_couche_sortie(state1_J2))) + 1
+            idx = action_J2 - 1
+            action_J2p = idx % 9 + 1
+            action_J2e = idx // 9 + 1
         elif entrainement_actuel == 'J2':
-            action_J2 = choisir_action(reseau_neurones_J2, state1_J2, p)
+            action_J2p, action_J2e = choisir_action(reseau_neurones_J2, state1_J2, p)
             action_J1 = int(np.argmax(reseau_neurones_J1.calcul_couche_sortie(state1_J1))) + 1
+            idx = action_J1 - 1
+            action_J1p = idx % 9 + 1
+            action_J1e = idx // 9 + 1
         if plus_proche_J1 == 'joueur a':
-            idx_J1 = action_J1 - 1
-            action_J1a = idx_J1 % 9 + 1
-            action_J1b = idx_J1 // 9 + 1
+            action_J1a = action_J1p
+            action_J1b = action_J1e
         elif plus_proche_J1 == 'joueur b':
-            idx_J1 = action_J1 - 1
-            action_J1b = idx_J1 % 9 + 1
-            action_J1a = idx_J1 // 9 + 1
+            action_J1b = action_J1p
+            action_J1a = action_J1e
         if plus_proche_J2 == 'joueur a':
-            idx_J2 = action_J2 - 1
-            action_J2a = conversions_actions_J2[idx_J2 % 9 + 1]
-            action_J2b = conversions_actions_J2[idx_J2 // 9 + 1]
+            action_J2a = conversions_actions_J2[action_J2p]
+            action_J2b = conversions_actions_J2[action_J2e]
         elif plus_proche_J2 == 'joueur b':
-            idx_J2 = action_J2 - 1
-            action_J2b = conversions_actions_J2[idx_J2 % 9 + 1]
-            action_J2a = conversions_actions_J2[idx_J2 // 9 + 1]
+            action_J2b = conversions_actions_J2[action_J2p]
+            action_J2a = conversions_actions_J2[action_J2e]
 
-        reward_J1, reward_J2, but_marque, vainqueur, buffer_local, historique_tirs = executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app, iteration, buffer_local, historique_tirs, plus_proche_J1, plus_proche_J2)
+        reward_J1, reward_J2, but_marque, vainqueur, buffer_local, historique_tirs = executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app, iteration, buffer_local, historique_tirs, plus_proche_J1, plus_proche_J2, entrainement_actuel)
 
         if iteration >= NB_ITERATIONS_1_PARTIE:
             partie_en_cours = False
@@ -110,8 +112,10 @@ def jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, p, partie, entraine
             state2_J2 = build_state_foot_2v2_J2(TAILLE_STATE, app, app.balle, app.joueur2b, app.joueur2a, app.joueur1b, app.joueur1a, Tp_J2, Te_J2)
 
         if entrainement_actuel == 'J1':
+            action_J1 = action_J1p + 9 * (action_J1e - 1)
             buffer_local.append(np.concatenate([state1_J1, state2_J1, [action_J1, reward_J1, but_marque]]))
         elif entrainement_actuel == 'J2':
+            action_J2 = action_J2p + 9 * (action_J2e - 1)
             buffer_local.append(np.concatenate([state1_J2, state2_J2, [action_J2, reward_J2, but_marque]]))
 
         app.balle.joueur_tir = None
@@ -134,16 +138,27 @@ def jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, p, partie, entraine
 
 
 def choisir_action(reseau_neurones, state, p):
+    joueur = ""
     if random.random() <= p:
-        return random.randint(1, NB_ACTIONS_POSSIBLES)
-    return np.argmax(reseau_neurones.calcul_couche_sortie(state)) + 1
+        joueur = random.choice(["a", "b"])
 
+    actions = np.argmax(reseau_neurones.calcul_couche_sortie(state)) + 1
+    idx = actions - 1
+    action_Ja = idx % 9 + 1
+    action_Jb = idx // 9 + 1
+    if joueur == "a":
+        action_Ja = random.randint(1, 9)
+    elif joueur == "b":
+        action_Jb = random.randint(1, 9)
 
-def executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app: Foot_2v2, iteration, buffer_local, historique_tirs, plus_proche_J1, plus_proche_J2):
+    return action_Ja, action_Jb
+
+def executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app: Foot_2v2, iteration, buffer_local, historique_tirs, plus_proche_J1, plus_proche_J2, entrainement_actuel):
     joueur1ax, joueur1ay = app.joueur1a.x, app.joueur1a.y
     joueur1bx, joueur1by = app.joueur1b.x, app.joueur1b.y
     joueur2ax, joueur2ay = app.joueur2a.x, app.joueur2a.y
     joueur2bx, joueur2by = app.joueur2b.x, app.joueur2b.y
+    ballex = app.balle.x
 
     app.joueur1a.action = action_J1a
     app.joueur1a.convert_action_vitesse()
@@ -165,51 +180,48 @@ def executer_action(action_J1a, action_J1b, action_J2a, action_J2b, app: Foot_2v
     reward_J1 = 0
     reward_J2 = 0
 
-    if app.balle.possession == app.joueur1a.nom:
-        reward_J2 -= 0.01
-        reward_J1 += 0.01
+    '''if app.balle.possession == app.joueur1a.nom:
+        reward_J2 -= 0.05
+        reward_J1 += 0.05
     elif app.balle.possession == app.joueur2a.nom:
-        reward_J1 -= 0.01
-        reward_J2 += 0.01
-
+        reward_J1 -= 0.05
+        reward_J2 += 0.05'''
+    
     if historique_tirs != []:
-        if (app.joueur1a.tir or app.joueur1b.tir or app.joueur2a.tir or app.joueur2b.tir) and historique_tirs[-1][0][-2] == '1':
+        if (app.joueur1a.tir or app.joueur1b.tir or app.joueur2a.tir or app.joueur2b.tir) and historique_tirs[-1][0][-2] == '1' and entrainement_actuel == 'J1':
             # on recompense le tir précédent en fonction de la distance parcourue
             distance_parcourue = app.balle.x - historique_tirs[-1][2]
-            buffer_local[historique_tirs[-1][1]][3] += 3 * (distance_parcourue / (VITESSE_JOUEUR * (1 / COEF_FROT_FLUIDE)))
-        elif (app.joueur1a.tir or app.joueur1b.tir or app.joueur2a.tir or app.joueur2b.tir) and historique_tirs[-1][0][-2] == '2':
+            buffer_local[historique_tirs[-1][1]][2 * TAILLE_STATE + 1] += 5 * max(distance_parcourue / (VITESSE_JOUEUR * (1 / COEF_FROT_FLUIDE)), distance_parcourue / (2 * VITESSE_JOUEUR * (1 / COEF_FROT_FLUIDE)))
+        elif (app.joueur1a.tir or app.joueur1b.tir or app.joueur2a.tir or app.joueur2b.tir) and historique_tirs[-1][0][-2] == '2' and entrainement_actuel == 'J2':
             # on recompense le tir précédent en fonction de la distance parcourue
             distance_parcourue = historique_tirs[-1][2] - app.balle.x
-            buffer_local[historique_tirs[-1][1]][3] += 3 * (distance_parcourue / (VITESSE_JOUEUR * (1 / COEF_FROT_FLUIDE)))
+            buffer_local[historique_tirs[-1][1]][2 * TAILLE_STATE + 1] += 5 * max(distance_parcourue / (VITESSE_JOUEUR * (1 / COEF_FROT_FLUIDE)), distance_parcourue / (2 * VITESSE_JOUEUR * (1 / COEF_FROT_FLUIDE)))
+    
+    if app.joueur1a.tir or app.joueur1b.tir:
+        '''if historique_tirs != []:
+            if historique_tirs[-1][0][-2] == '2':  # bonne défense
+                reward_J1 += 2
+                if entrainement_actuel == 'J2':  # on pénalise le fait que J2 ne conserve pas la balle
+                    buffer_local[historique_tirs[-1][1]][2 * TAILLE_STATE + 1] -= 1
+            elif historique_tirs[-1][0][-2] == '1':
+                buffer_local[historique_tirs[-1][1]][2 * TAILLE_STATE + 1] += 2'''
+        if app.joueur1a.tir:
+            historique_tirs.append(('joueur 1a', len(buffer_local), app.balle.x, app.balle.y))
+        if app.joueur1b.tir:
+            historique_tirs.append(('joueur 1b', len(buffer_local), app.balle.x, app.balle.y))
 
-    if app.joueur1a.tir:
-        if historique_tirs != []:
-            if historique_tirs[-1][0][-2] == '1':  # conservation de balle
-                buffer_local[historique_tirs[-1][1]][3] += 1  # on ajoute cette reward au sample correspondant
-            '''elif historique_tirs[-1][0][-2] == '2':  # bonne défense
-                reward_J1 += 2'''
-        historique_tirs.append(('joueur 1a', len(buffer_local), app.balle.x, app.balle.y))
-    elif app.joueur1b.tir:
-        if historique_tirs != []:
-            if historique_tirs[-1][0][-2] == '1':  # conservation de balle
-                buffer_local[historique_tirs[-1][1]][3] += 1  # on ajoute cette reward au sample correspondant
-            '''elif historique_tirs[-1][0][-2] == '2':  # bonne défense
-                reward_J1 += 2'''
-        historique_tirs.append(('joueur 1b', len(buffer_local), app.balle.x, app.balle.y))
-    elif app.joueur2a.tir:
-        if historique_tirs != []:
-            if historique_tirs[-1][0][-2] == '2':  # conservation de balle
-                buffer_local[historique_tirs[-1][1]][3] += 1  # on ajoute cette reward au sample correspondant
-            '''elif historique_tirs[-1][0][-2] == '1':  # bonne défense
-                reward_J2 += 2'''
-        historique_tirs.append(('joueur 2a', len(buffer_local), app.balle.x, app.balle.y))
-    elif app.joueur2b.tir:
-        if historique_tirs != []:
-            if historique_tirs[-1][0][-2] == '2':  # conservation de balle
-                buffer_local[historique_tirs[-1][1]][3] += 1  # on ajoute cette reward au sample correspondant
-            '''elif historique_tirs[-1][0][-2] == '1':  # bonne défense
-                reward_J2 += 2'''
-        historique_tirs.append(('joueur 2b', len(buffer_local), app.balle.x, app.balle.y))
+    elif app.joueur2a.tir or app.joueur2b.tir:
+        '''if historique_tirs != []:
+            if historique_tirs[-1][0][-2] == '1':  # bonne défense
+                reward_J2 += 2
+                if entrainement_actuel == 'J1':  # on pénalise le fait que J1 ne conserve pas la balle
+                    buffer_local[historique_tirs[-1][1]][2 * TAILLE_STATE + 1] -= 1
+            elif historique_tirs[-1][0][-2] == '2':
+                buffer_local[historique_tirs[-1][1]][2 * TAILLE_STATE + 1] += 2'''
+        if app.joueur2a.tir:
+            historique_tirs.append(('joueur 2a', len(buffer_local), app.balle.x, app.balle.y))
+        if app.joueur2b.tir:
+            historique_tirs.append(('joueur 2b', len(buffer_local), app.balle.x, app.balle.y))
 
     but_marque = False
     score1 = app.balle.actu_score1(app.scorej1)
@@ -273,12 +285,13 @@ def entrainer(nb_parties=NB_PARTIES):
         entrainement_actuel = 'J2'
     else:
         entrainement_actuel = 'J1'
+    #entrainement_actuel = 'J1'
 
     Liste_victoires = []
     for partie in range(nb_parties):
         '''xd = - math.log(p_debut)
         xf = - math.log(p_fin)
-        x = xd + (xf - xd) * (partie % 2000) / 2000
+        x = xd + (xf - xd) * (partie % 1000) / 1000
         p = math.exp(-x)'''
         p = p_debut - (p_debut - p_fin) * (partie % 1000) / 1000
         vainqueur = jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, p, partie, entrainement_actuel, True)
@@ -307,14 +320,18 @@ def entrainer(nb_parties=NB_PARTIES):
             print('resultats du test :')
             print(f'WR /500 parties J1 : {Liste_victoires.count(1) * 100 / len(Liste_victoires)} % | WR /500 parties J2 : {Liste_victoires.count(-1) * 100 / len(Liste_victoires)} %')
             print()
-            if Liste_victoires.count(1) * 100 / len(Liste_victoires) > 10 + Liste_victoires.count(-1) * 100 / len(Liste_victoires) and entrainement_actuel == 'J1':  # si on gagne 10% + que J2 on actualise reseau J2
+            if entrainement_actuel == 'J1':
                 reseau_neurones_J1.export_reseau(partie)
                 entrainement_actuel = 'J2'
-                reseau_neurones_J2.vider_samples()  # on vide les samples trop vieux
-            elif Liste_victoires.count(1) * 100 / len(Liste_victoires) + 10 < Liste_victoires.count(-1) * 100 / len(Liste_victoires) and entrainement_actuel == 'J2':
+            elif entrainement_actuel == 'J2':
                 reseau_neurones_J2.export_reseau(partie)
                 entrainement_actuel = 'J1'
-                reseau_neurones_J1.vider_samples()
+            '''if Liste_victoires.count(1) * 100 / len(Liste_victoires) > 30 + Liste_victoires.count(-1) * 100 / len(Liste_victoires) and entrainement_actuel == 'J1':  # si on gagne 10% + que J2 on actualise reseau J2
+                entrainement_actuel = 'J2'
+                reseau_neurones_J2.vider_samples()  # on vide les samples trop vieux
+            elif Liste_victoires.count(1) * 100 / len(Liste_victoires) + 30 < Liste_victoires.count(-1) * 100 / len(Liste_victoires) and entrainement_actuel == 'J2':
+                entrainement_actuel = 'J1'
+                reseau_neurones_J1.vider_samples()'''
 
 
 if __name__ == "__main__":
