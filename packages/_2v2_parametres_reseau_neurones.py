@@ -1,7 +1,7 @@
 NB_PARTIES = 10000000
 NB_ITERATIONS_1_PARTIE = 1000
-p_debut = 0.2
-p_fin = 0.1
+p_debut = 0.03
+p_fin = 0.03
 TAILLE_STATE = 24
 NB_ACTIONS_POSSIBLES = 81  # on suppose les actions numérotées 1, 2, ... NB_ACTIONS_POSSIBLES
 NB_SAMPLES_MAX = 600000

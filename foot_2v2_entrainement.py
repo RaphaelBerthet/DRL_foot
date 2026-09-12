@@ -293,7 +293,7 @@ def entrainer(nb_parties=NB_PARTIES):
         xf = - math.log(p_fin)
         x = xd + (xf - xd) * (partie % 1000) / 1000
         p = math.exp(-x)'''
-        p = p_debut - (p_debut - p_fin) * (partie % 1000) / 1000
+        p = p_debut - (p_debut - p_fin) * (partie % 2000) / 2000
         vainqueur = jouer_une_partie(reseau_neurones_J1, reseau_neurones_J2, p, partie, entrainement_actuel, True)
         if vainqueur == 'joueur1':
             Liste_victoires.append(1)
@@ -304,7 +304,7 @@ def entrainer(nb_parties=NB_PARTIES):
         '''if partie % 100 == 0:
             print(f'WR J1 : {Liste_victoires.count(1) * 100 / len(Liste_victoires)} % | WR J2 : {Liste_victoires.count(-1) * 100 / len(Liste_victoires)} % | nulles : {Liste_victoires.count(0) * 100 / len(Liste_victoires)} %')
         '''
-        if (partie + 1) % 1000 == 0:
+        if (partie + 1) % 2000 == 0:
             # on realise 500 parties
             Liste_victoires = []
             for _ in range(500):
